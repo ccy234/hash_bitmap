@@ -6,8 +6,6 @@
 #include "spider_hash_bitmap.h"
 
 #define IP_SHIFT 16
-#define BITMAP_SIZE 65536
-#define SPIDER_IP_HTBL_SIZE 9997
 
 
 unsigned int spider_ip_elem_h1(const void *key)
@@ -97,14 +95,16 @@ int add_spider_ip(uint16_t spider_id, char *spider_name, uint32_t ip, int mask, 
     uint32_t start = (ip & 0xffff);
     uint32_t end = start + pow(2, 32-mask);
     l7_spider_t *new_spider_ip_elem, *ret;
+    int len=0;
 
+    len = strlen(spider_name);
     ret = find_ip_ret(spider_id, ip, spider_htbl, &key);
     if (ret == NULL) {
         // insert elem into hashtab
-        new_spider_ip_elem = malloc(sizeof(l7_spider_t));
+        new_spider_ip_elem = calloc(1, sizeof(l7_spider_t));
         new_spider_ip_elem->spider_id = spider_id;
-        new_spider_ip_elem->name = malloc(strlen(spider_name) + 1);
-        snprintf(new_spider_ip_elem->name, sizeof(new_spider_ip_elem->name), "%s", spider_name);//fix
+        new_spider_ip_elem->name = calloc(1, len + 1);
+        snprintf(new_spider_ip_elem->name, len+1, "%s", spider_name);//fix
         new_spider_ip_elem->ipmask_16 = ip >> IP_SHIFT; 
 
         snprintf(str_ip, sizeof(str_ip), "%u-%u", new_spider_ip_elem->spider_id, new_spider_ip_elem->ipmask_16);
@@ -113,7 +113,7 @@ int add_spider_ip(uint16_t spider_id, char *spider_name, uint32_t ip, int mask, 
 
         ipmap = create_bitmap(BITMAP_SIZE);
         if (ipmap == NULL) {
-            return 0;
+            goto BIT_MAP_FAIL;
         }
         new_spider_ip_elem->ip_map = ipmap;
         for (i=start; i<end; i++) {
@@ -123,9 +123,8 @@ int add_spider_ip(uint16_t spider_id, char *spider_name, uint32_t ip, int mask, 
 
         htbl_insert_ret = ohtbl_insert(spider_htbl, new_spider_ip_elem);
         if (htbl_insert_ret != 1) {
-            //l7_log_err("insert %s spider into name_id hashtable fail", file_name);
             printf("error insert\n");
-            return 0;
+            goto HASH_INSERT_FAIL;
         }
         new_spider_ip_elem = NULL;
     } else {
@@ -137,6 +136,18 @@ int add_spider_ip(uint16_t spider_id, char *spider_name, uint32_t ip, int mask, 
         }
     }
     return 1;
+
+HASH_INSERT_FAIL:
+    if (new_spider_ip_elem && new_spider_ip_elem->ip_map) {
+        destory_bitmap(new_spider_ip_elem->ip_map);
+    }
+BIT_MAP_FAIL:
+    if (new_spider_ip_elem) {
+        if (new_spider_ip_elem->name)
+            free(new_spider_ip_elem->name);
+        free(new_spider_ip_elem);
+    }
+    return 0;
 }
 
 //return 1 sucess, 0 false
@@ -155,7 +166,7 @@ int del_spider_ip(uint16_t spider_id, uint32_t ip, ohtbl_t *g_spider_htbl)
     //}
 
     // clr ip map
-
+    return 0;
 }
 
 //return 1 inside, 0 outside

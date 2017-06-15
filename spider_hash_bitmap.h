@@ -4,6 +4,9 @@
 #ifndef SPIDER_HASH_BITMAP_H
 #define SPIDER_HASH_BITMAP_H 1
 
+#define BITMAP_SIZE 65536
+#define SPIDER_IP_HTBL_SIZE 9997
+
 typedef struct {
     char *name;
     uint32_t hash;
