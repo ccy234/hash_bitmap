@@ -15,6 +15,30 @@ BITMAP *create_bitmap(int size)
     pmap->map = (uint32_t *)calloc(pmap->size, sizeof(uint32_t));
     return pmap;
 }
+int set_bitmaps(int start, int end, BITMAP *bitmap)
+{
+	int i;
+    int index_s, bit_loc_s;
+    int index_e, bit_loc_e;
+    uint32_t *map = bitmap->map;
+
+    index_s = start >> SHIFT; //num / 32
+    bit_loc_s = start & MASK; // num % 32
+
+    index_e = end >> SHIFT; //num / 32
+    bit_loc_e = end & MASK; // num % 32
+	if (index_s == index_e) {
+		map[index_s] |= ((1<<(bit_loc_e-bit_loc_s))-1) << bit_loc_s
+	} else if(index_s < index_e){
+    	map[index_s] |= ~((1 << bit_loc_s)-1);
+    	map[index_e] |= ((1 << (bit_loc_e+1))-1);
+		for (i=index_s+1;i<index_s; i++) {
+			map[i] |= 0xffffffff;
+		}
+	}
+
+    return 1;
+}
 int set_bitmap(int num, BITMAP *bitmap)
 {
     int index_loc, bit_loc;
