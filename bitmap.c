@@ -28,11 +28,11 @@ int set_bitmaps(int start, int end, BITMAP *bitmap)
     index_e = end >> SHIFT; //num / 32
     bit_loc_e = end & MASK; // num % 32
 	if (index_s == index_e) {
-		map[index_s] |= ((1<<(bit_loc_e-bit_loc_s))-1) << bit_loc_s
+		map[index_s] |= ((1<<(bit_loc_e-bit_loc_s+1))-1) << bit_loc_s;
 	} else if(index_s < index_e){
     	map[index_s] |= ~((1 << bit_loc_s)-1);
     	map[index_e] |= ((1 << (bit_loc_e+1))-1);
-		for (i=index_s+1;i<index_s; i++) {
+		for (i=index_s+1;i<index_e; i++) {
 			map[i] |= 0xffffffff;
 		}
 	}
@@ -88,14 +88,14 @@ int destory_bitmap(BITMAP *bitmap)
     free(bitmap);
     return 1;
 }
-#if 0
+#if 1
 int main(void)
 {
-    int i, num, space;
+    int i, num, num2, space;
     BITMAP *bitmap;
 
-    bitmap = create_bitmap(30); 
-    printf("please select type> 1: set bit 2: clear bit 3: check bit\n");
+    bitmap = create_bitmap(120); 
+    printf("please select type> 1: set bit 2: clear bit 3: check bit 4:set num1 num2\n");
     while (scanf("%d", &num) != EOF) {
         switch (num) {
         case 1:
@@ -118,6 +118,12 @@ int main(void)
             } else {
                 printf("fail!\n");
             }
+            break;
+        case 4:
+            printf("input num:");
+            scanf("%d %d", &num, &num2);
+            set_bitmaps(num, num2, bitmap);
+            printf("set %d-%d sucess!\n", num, num2);
             break;
         default:
             break;
